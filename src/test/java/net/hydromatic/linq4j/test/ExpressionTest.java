@@ -907,9 +907,8 @@ public class ExpressionTest {
     BlockStatement expression = statements.toBlock();
     assertEquals(
         "{\n"
-        + "  final java.util.Comparator comparator = null;\n"
         + "  return new java.util.TreeSet(\n"
-        + "      comparator).add(null);\n"
+        + "      (java.util.Comparator) null).add(null);\n"
         + "}\n",
         Expressions.toString(expression));
     expression.accept(new Visitor());
@@ -1074,6 +1073,8 @@ public class ExpressionTest {
   }
 
   @Test public void assignInCondition() {
+    // int t;
+    // return (t = 1) != a ? t : c
     final BlockBuilder builder = new BlockBuilder(true);
     final ParameterExpression t = Expressions.parameter(int.class, "t");
 
@@ -1083,19 +1084,21 @@ public class ExpressionTest {
         Expressions.makeTernary(ExpressionType.Conditional,
             Expressions.makeBinary(ExpressionType.NotEqual,
                 Expressions.assign(t, Expressions.constant(1)),
-                Expressions.constant(2)),
+                Expressions.parameter(int.class, "a")),
             t,
-            Expressions.constant(3)));
+            Expressions.parameter(int.class, "c")));
     builder.add(Expressions.return_(null, v));
     assertEquals(
         "{\n"
         + "  int t;\n"
-        + "  return (t = 1) != 2 ? t : 3;\n"
+        + "  return (t = 1) != a ? t : c;\n"
         + "}\n",
         Expressions.toString(builder.toBlock()));
   }
 
   @Test public void assignInConditionOptimizedOut() {
+    // int t;
+    // return (t = 1) != a ? b : c
     final BlockBuilder builder = new BlockBuilder(true);
     final ParameterExpression t = Expressions.parameter(int.class, "t");
 
@@ -1105,13 +1108,13 @@ public class ExpressionTest {
         Expressions.makeTernary(ExpressionType.Conditional,
             Expressions.makeBinary(ExpressionType.NotEqual,
                 Expressions.assign(t, Expressions.constant(1)),
-                Expressions.constant(2)),
-            Expressions.constant(4),
-            Expressions.constant(3)));
+                Expressions.parameter(int.class, "a")),
+            Expressions.parameter(int.class, "b"),
+            Expressions.parameter(int.class, "c")));
     builder.add(Expressions.return_(null, v));
     assertEquals(
         "{\n"
-        + "  return 1 != 2 ? 4 : 3;\n"
+        + "  return 1 != a ? b : c;\n"
         + "}\n",
         Expressions.toString(builder.toBlock()));
   }
@@ -1131,7 +1134,7 @@ public class ExpressionTest {
                 Expressions.constant(4)), Short.class));
     Expression v0 = builder.append(
         "v0",
-        Expressions.convert_(v, Integer.class));
+        Expressions.convert_(v, Number.class));
     Expression v1 = builder.append(
         "v1",
         Expressions.convert_(
@@ -1140,7 +1143,7 @@ public class ExpressionTest {
                 Expressions.constant(4)), Short.class));
     Expression v2 = builder.append(
         "v2",
-        Expressions.convert_(v, Integer.class));
+        Expressions.convert_(v, Number.class));
     Expression v3 = builder.append(
         "v3",
         Expressions.convert_(
@@ -1149,7 +1152,7 @@ public class ExpressionTest {
                 Expressions.constant(4)), Short.class));
     Expression v4 = builder.append(
         "v4",
-        Expressions.convert_(v3, Integer.class));
+        Expressions.convert_(v3, Number.class));
     Expression v5 = builder.append("v5", Expressions.call(v4, "intValue"));
     Expression v6 = builder.append(
         "v6",
@@ -1160,8 +1163,9 @@ public class ExpressionTest {
     builder.add(Expressions.return_(null, v6));
     assertEquals(
         "{\n"
-        + "  final Integer v0 = (Integer) (Short) ((Object[]) p)[4];\n"
-        + "  return v0 == null ? null : v0.intValue() == 1997;\n"
+        + "  final Short v = (Short) ((Object[]) p)[4];\n"
+        + "  return (Number) v == null ? (Boolean) null : ("
+        + "(Number) v).intValue() == 1997;\n"
         + "}\n",
         Expressions.toString(builder.toBlock()));
   }
