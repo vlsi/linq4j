@@ -469,6 +469,7 @@ public class BlockBuilder {
     private final Map<ParameterExpression, Slot> map =
         new IdentityHashMap<ParameterExpression, Slot>();
 
+    @Override
     public Expression visit(ParameterExpression parameter) {
       final Slot slot = map.get(parameter);
       if (slot != null) {
@@ -478,6 +479,18 @@ public class BlockBuilder {
         slot.count++;
       }
       return super.visit(parameter);
+    }
+
+    @Override
+    public Expression visit(BinaryExpression binaryExpression, Expression
+        expression0, Expression expression1) {
+      if (binaryExpression.getNodeType() == ExpressionType.Assign) {
+        Slot slot = map.get(binaryExpression.expression0);
+        if (slot != null) {
+//          slot.count--;
+        }
+      }
+      return super.visit(binaryExpression, expression0, expression1);
     }
   }
 

@@ -178,6 +178,10 @@ public class OptimizeVisitor extends Visitor {
       if (expression.getType() == unaryExpression.getType()) {
         return expression;
       }
+      if (expression instanceof ConstantExpression) {
+        return Expressions.constant(((ConstantExpression) expression).value,
+            unaryExpression.getType());
+      }
     }
     return super.visit(unaryExpression, expression);
   }
